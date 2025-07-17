@@ -1,6 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-const { obterTimelineDoNup } = require('./scrape-nup'); // Certifique-se que no scrape-nup.js a função seja exportada assim
+const obterTimelineDoNup = require('./scrape-nup'); // Importa a função diretamente
 
 const app = express();
 const PORT = process.env.PORT || 8080;
