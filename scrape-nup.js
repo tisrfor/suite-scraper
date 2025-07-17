@@ -1,6 +1,6 @@
 const puppeteer = require('puppeteer');
 
-async function scrapeProcesso(nup) {
+async function obterTimelineDoNup(nup) {
   console.log(`Iniciando scraping do NUP: ${nup}`);
 
   const browser = await puppeteer.launch({ headless: true });
@@ -141,10 +141,10 @@ async function scrapeProcesso(nup) {
   }
 }
 
-// Exportar como módulo
-module.exports = scrapeProcesso;
+// Exportar com nome correto
+module.exports = { obterTimelineDoNup };
 
-// Rodar diretamente via terminal
+// Rodar via terminal (opcional)
 if (require.main === module) {
   const nup = process.argv[2];
   if (!nup) {
@@ -152,5 +152,5 @@ if (require.main === module) {
     process.exit(1);
   }
 
-  scrapeProcesso(nup);
+  obterTimelineDoNup(nup).then(console.log);
 }
