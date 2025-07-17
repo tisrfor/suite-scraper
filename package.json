@@ -1,0 +1,21 @@
+{
+  "name": "suite-scraper",
+  "version": "1.0.0",
+  "description": "Scraper de processos do SUITE",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js",
+    "scrape": "node scrape-nup.js",
+    "postinstall": "npx puppeteer install"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.10.0",
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "googleapis": "^152.0.0",
+    "puppeteer": "^24.12.1"
+  }
+}
