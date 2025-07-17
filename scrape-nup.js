@@ -5,24 +5,32 @@ async function scrapeProcesso(nup) {
 
   const browser = await puppeteer.launch({
     headless: true,
-    args: [
-      '--no-sandbox',
-      '--disable-setuid-sandbox',
-      '--disable-dev-shm-usage'
-    ]
+    args: ['--no-sandbox', '--disable-setuid-sandbox'] // importante para rodar em servidores Linux (ex: Railway)
   });
   const page = await browser.newPage();
 
   try {
     await page.goto('https://suite.ce.gov.br/consultar-processo', { waitUntil: 'networkidle2' });
+    console.log('Página inicial carregada');
 
     await page.waitForSelector('input[placeholder="Pesquise por NUP, nome ou assunto"]', { timeout: 30000 });
+    console.log('Input de pesquisa encontrado');
+
     await page.type('input[placeholder="Pesquise por NUP, nome ou assunto"]', nup);
     await page.keyboard.press('Enter');
+    console.log('NUP digitado e busca iniciada');
 
-    await page.waitForSelector('div.timeline-panel', { timeout: 30000 });
-    await page.waitForSelector('div.has-text-weight-semibold.header-label.spacing-mb-20', { timeout: 30000 });
+    // Aumentando timeout para 60s e tratando erro para devolver mensagem customizada
+    try {
+      await page.waitForSelector('div.timeline-panel', { timeout: 60000 });
+      console.log('Timeline encontrada');
+    } catch (e) {
+      console.error('⛔ Timeout esperando a timeline aparecer. Pode ser que o NUP não exista ou estrutura da página mudou.');
+      await browser.close();
+      return { sucesso: false, erro: 'Timeout aguardando timeline. NUP pode ser inválido ou estrutura da página mudou.' };
+    }
 
+    // Agora extrair dados da página
     const dados = await page.evaluate(() => {
       const getText = (selector) => {
         const el = document.querySelector(selector);
@@ -137,7 +145,7 @@ async function scrapeProcesso(nup) {
     });
 
     console.log('Dados coletados:', dados);
-    return dados;
+    return { sucesso: true, dados };
 
   } catch (error) {
     console.error(`❌ Erro no Puppeteer para NUP ${nup}:`, error.message);
@@ -148,8 +156,8 @@ async function scrapeProcesso(nup) {
   }
 }
 
-// Exportar como módulo com nome correto
-module.exports = { obterTimelineDoNup: scrapeProcesso };
+// Exportar como módulo
+module.exports = scrapeProcesso;
 
 // Rodar diretamente via terminal
 if (require.main === module) {
@@ -159,5 +167,8 @@ if (require.main === module) {
     process.exit(1);
   }
 
-  scrapeProcesso(nup);
+  scrapeProcesso(nup).then(resultado => {
+    console.log(JSON.stringify(resultado, null, 2));
+    process.exit(0);
+  });
 }

@@ -1,6 +1,6 @@
 const express = require('express');
 const cors = require('cors');
-const { obterTimelineDoNup } = require('./scrape-nup');
+const { obterTimelineDoNup } = require('./scrape-nup'); // Certifique-se que no scrape-nup.js a função seja exportada assim
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -14,21 +14,32 @@ app.get('/', (req, res) => {
 
 app.get('/nup/:nup', async (req, res) => {
   const { nup } = req.params;
+  console.log(`Recebida requisição para NUP: ${nup}`);
 
   try {
-    const dados = await obterTimelineDoNup(nup);
+    const resultado = await obterTimelineDoNup(nup);
 
-    if (!dados) {
+    if (!resultado) {
+      console.error('Erro: resultado undefined do scraper');
       return res.status(500).json({
         sucesso: false,
         erro: 'Erro ao obter os dados do processo.',
       });
     }
 
+    if (!resultado.sucesso) {
+      console.warn(`Scraper retornou erro para NUP ${nup}: ${resultado.erro}`);
+      return res.status(400).json({
+        sucesso: false,
+        erro: resultado.erro || 'Erro ao buscar dados do processo.',
+      });
+    }
+
     res.json({
       sucesso: true,
-      dados,
+      dados: resultado.dados,
     });
+
   } catch (error) {
     console.error('Erro no endpoint /nup:', error);
     res.status(500).json({
