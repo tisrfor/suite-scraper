@@ -1,9 +1,16 @@
 const puppeteer = require('puppeteer');
 
-async function obterTimelineDoNup(nup) {
+async function scrapeProcesso(nup) {
   console.log(`Iniciando scraping do NUP: ${nup}`);
 
-  const browser = await puppeteer.launch({ headless: true });
+  const browser = await puppeteer.launch({
+    headless: true,
+    args: [
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--disable-dev-shm-usage'
+    ]
+  });
   const page = await browser.newPage();
 
   try {
@@ -134,17 +141,17 @@ async function obterTimelineDoNup(nup) {
 
   } catch (error) {
     console.error(`❌ Erro no Puppeteer para NUP ${nup}:`, error.message);
-    return null;
+    return { sucesso: false, erro: error.message };
   } finally {
     await browser.close();
     console.log(`✅ Processo finalizado para o NUP: ${nup}`);
   }
 }
 
-// Exportar com nome correto
-module.exports = { obterTimelineDoNup };
+// Exportar como módulo com nome correto
+module.exports = { obterTimelineDoNup: scrapeProcesso };
 
-// Rodar via terminal (opcional)
+// Rodar diretamente via terminal
 if (require.main === module) {
   const nup = process.argv[2];
   if (!nup) {
@@ -152,5 +159,5 @@ if (require.main === module) {
     process.exit(1);
   }
 
-  obterTimelineDoNup(nup).then(console.log);
+  scrapeProcesso(nup);
 }
