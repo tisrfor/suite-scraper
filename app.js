@@ -1,37 +1,33 @@
-// app.js (novo formato para funcionar no Render)
 const express = require('express');
-const { exec } = require('child_process');
+const cors = require('cors');
+const { obterTimelineDoNup } = require('./scrape-nup');
+
 const app = express();
-const PORT = process.env.PORT || 3000;
+const port = process.env.PORT || 8080;
+
+app.use(cors());
+app.use(express.json());
 
 app.get('/', (req, res) => {
   res.send('Servidor Suite-Scraper online. Use /nup/:nup para consultar.');
 });
 
-app.get('/nup/:nup', (req, res) => {
+app.get('/nup/:nup', async (req, res) => {
   const nup = req.params.nup;
 
   if (!/^\d{17,}$/.test(nup)) {
-    return res.status(400).json({ erro: 'NUP inválido. Deve conter pelo menos 17 dígitos numéricos.' });
+    return res.status(400).json({ sucesso: false, erro: 'NUP inválido. Deve conter pelo menos 17 dígitos numéricos.' });
   }
 
-  const comando = `node scrape-nup.js ${nup}`;
-  exec(comando, { timeout: 60000 }, (error, stdout, stderr) => {
-    if (error) {
-      console.error('Erro ao executar o scraper:', error);
-      return res.status(500).json({ erro: 'Erro ao consultar o NUP.', detalhe: stderr || error.message });
-    }
-
-    try {
-      const resultado = JSON.parse(stdout);
-      res.json(resultado);
-    } catch (e) {
-      console.error('Erro ao parsear o JSON:', e);
-      res.status(500).json({ erro: 'Resposta inválida do scraper.', resposta: stdout });
-    }
-  });
+  try {
+    const dados = await obterTimelineDoNup(nup);
+    res.json(dados);
+  } catch (erro) {
+    console.error('Erro ao consultar o NUP:', erro);
+    res.status(500).json({ sucesso: false, erro: erro.message || 'Erro interno.' });
+  }
 });
 
-app.listen(PORT, () => {
-  console.log(`Servidor Suite-Scraper rodando na porta ${PORT}`);
+app.listen(port, () => {
+  console.log(`Servidor Suite-Scraper rodando na porta ${port}`);
 });
